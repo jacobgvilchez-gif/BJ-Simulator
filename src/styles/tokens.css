@@ -1,0 +1,46 @@
+/* Design tokens, transcribed from the Casino Felt handoff. */
+:root {
+  /* Felt & surface */
+  --felt-center: #14614a;
+  --felt-mid: #0d4636;
+  --felt-edge: #06251c;
+  --card-face-top: #fffdf6;
+  --card-face-bottom: #f2e9d6;
+  --card-back-a: #7d1f1f;
+  --card-back-b: #5e1616;
+  --rail-hairline: rgba(232, 207, 149, 0.22);
+
+  /* Ink */
+  --ink: #f3ead6;
+  --ink-bright: #f6edd8;
+  --ink-message: #f7e9c4;
+  --ink-muted: rgba(243, 234, 214, 0.6);
+  --ink-faint: rgba(243, 234, 214, 0.55);
+  --brass: #e8cf95;
+  --brass-deep: #c2a05b;
+  --brass-line: rgba(232, 207, 149, 0.5);
+  --brass-on-dark: #2a1c06;
+  --card-red: #b02a26;
+  --card-black: #16130e;
+
+  /* Type */
+  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+
+  /* Radius */
+  --r-plaque: 8px;
+  --r-card: 9px;
+  --r-hand: 12px;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-card: 0 12px 22px rgba(0, 0, 0, 0.42);
+  --shadow-chip: 0 6px 12px rgba(0, 0, 0, 0.35);
+  --shadow-button: 0 6px 14px rgba(0, 0, 0, 0.25);
+  --shadow-chip-stacked: 0 2px 5px rgba(0, 0, 0, 0.4);
+
+  /* Motion */
+  --motion-chip: 0.18s ease-out;
+  --motion-deal: 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+  --motion-flip: 0.3s;
+}

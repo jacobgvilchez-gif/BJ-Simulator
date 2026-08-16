@@ -66,14 +66,84 @@ jobs:
         with:
           args: -color
 
-  # Placeholder for the real build/test gate. Once the stack is chosen, replace
-  # the body of this job with the actual install/lint/test/build steps — the job
-  # id stays `build` so the required-check config in branch protection keeps working.
-  build:
-    name: Build and test
+  # Resolves the Node matrix at run time rather than hard-coding it, so PRs get
+  # fast feedback on the versions that matter and main gets the full sweep.
+  matrix:
+    name: Resolve build matrix
     runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.resolve.outputs.versions }}
     steps:
       - uses: actions/checkout@v7
 
-      - name: No build configured yet
-        run: echo "No build or test suite configured yet."
+      - name: Resolve Node versions
+        id: resolve
+        shell: bash
+        # github.event_name is a fixed enum, but pass it through env rather than
+        # interpolating into the script body — that habit is what keeps a future
+        # edit from turning into a script-injection bug.
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          dev="$(tr -d '[:space:]' < .nvmrc)"
+          if [ "$EVENT" = "pull_request" ]; then
+            # Just the version developers actually run, for a fast signal.
+            versions="[\"$dev\"]"
+          else
+            # Everything supported, so a regression on another line cannot reach main.
+            versions='["20", "22", "24"]'
+          fi
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+          echo "Resolved Node matrix: $versions"
+
+  verify:
+    name: Verify (Node ${{ matrix.node }})
+    needs: matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(needs.matrix.outputs.versions) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  # Stable single status for branch protection. A matrix job reports one check
+  # per leg ("Verify (Node 20)", ...), and those names change whenever the matrix
+  # changes — so a required check pointed at them would break. This gate keeps
+  # one unchanging name, "Build and test", regardless of how the matrix evolves.
+  build:
+    name: Build and test
+    needs: verify
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check matrix result
+        shell: bash
+        env:
+          RESULT: ${{ needs.verify.result }}
+        run: |
+          echo "Matrix result: $RESULT"
+          if [ "$RESULT" != "success" ]; then
+            echo "::error::One or more Verify legs did not succeed."
+            exit 1
+          fi
