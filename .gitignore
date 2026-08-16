@@ -1,3 +1,13 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Test output
+coverage/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -9,6 +19,8 @@ Thumbs.db
 
 # Logs
 *.log
+npm-debug.log*
 
 # Env
 .env
+.env.local

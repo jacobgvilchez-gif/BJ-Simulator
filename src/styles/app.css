@@ -1,0 +1,504 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- root surface ----------------------------------------------------- */
+
+.table {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 34%,
+    var(--felt-center) 0%,
+    var(--felt-mid) 45%,
+    var(--felt-edge) 100%
+  );
+}
+
+/* Felt tooth — a fine dot grid over the whole surface. */
+.table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 4px 4px;
+  opacity: 0.5;
+}
+
+.table__column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 18px 32px 16px;
+}
+
+/* --- band 1: rail ----------------------------------------------------- */
+
+.rail {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink-muted);
+}
+
+/* --- shared seat label ------------------------------------------------ */
+
+.seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.seat--dealer {
+  min-height: 160px;
+}
+
+.seat__label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.seat__label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.seat__total {
+  font-family: var(--font-ui);
+  color: var(--ink-bright);
+  letter-spacing: 0.06em;
+}
+
+.card-row {
+  display: flex;
+  gap: 10px;
+  perspective: 900px;
+  min-height: 138px;
+  align-items: flex-start;
+}
+
+/* --- band 3: signage arc ---------------------------------------------- */
+
+.signage {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 7px 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 19px;
+  letter-spacing: 0.04em;
+  color: rgba(232, 207, 149, 0.82);
+  border-top: 1px solid rgba(232, 207, 149, 0.28);
+  border-bottom: 1px solid rgba(232, 207, 149, 0.28);
+  /* bows the hairlines into an arc */
+  border-radius: 50% / 40px;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.18);
+}
+
+/* --- band 4: betting circle + player hands ---------------------------- */
+
+.felt-row {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  /* reserves room for the chip stack, which sits outside the circle */
+  padding-left: 60px;
+  min-height: 120px;
+}
+
+.circle {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 128px;
+  height: 128px;
+  border: 2px solid var(--brass-line);
+  border-radius: 50%;
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.28);
+}
+
+.circle__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: rgba(232, 207, 149, 0.7);
+}
+
+.circle__amount {
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: var(--ink-message);
+}
+
+/* chips build upward from the bottom */
+.chip-stack {
+  position: absolute;
+  left: -70px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.chip-stack__chip {
+  width: 52px;
+  height: 13px;
+  margin-top: -7px;
+  border-radius: 50%;
+  border: 3px solid;
+  box-shadow: var(--shadow-chip-stacked);
+  animation: chipDrop var(--motion-chip) both;
+}
+
+.hands {
+  display: flex;
+  gap: 34px;
+  perspective: 900px;
+  min-height: 150px;
+}
+
+.hand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: var(--r-hand);
+}
+
+.hand--active {
+  border-color: rgba(232, 207, 149, 0.85);
+}
+
+.hand__meta {
+  display: flex;
+  gap: 12px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.hand__total {
+  color: rgba(243, 234, 214, 0.75);
+}
+
+.hand__bet {
+  color: rgba(232, 207, 149, 0.85);
+}
+
+.hand__outcome {
+  color: var(--ink-bright);
+}
+
+/* --- band 5: round message -------------------------------------------- */
+
+.message {
+  min-height: 28px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  color: var(--ink-message);
+}
+
+/* --- insurance prompt -------------------------------------------------- */
+
+.insurance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  align-self: center;
+  padding: 12px 20px;
+  border: 1px solid rgba(232, 207, 149, 0.45);
+  border-radius: var(--r-pill);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.insurance__text {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 18px;
+}
+
+/* --- action row -------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 46px;
+}
+
+/* --- buttons ----------------------------------------------------------- */
+
+.btn {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 14px 26px;
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-button);
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: linear-gradient(#f0d69a, #c9a85f);
+  border: 1px solid #d9bd7e;
+  color: var(--brass-on-dark);
+}
+
+.btn--secondary {
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(243, 234, 214, 0.42);
+  color: var(--ink);
+}
+
+.pill {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 11px 16px;
+  border-radius: var(--r-pill);
+  background: transparent;
+  border: 1px solid rgba(243, 234, 214, 0.32);
+  color: rgba(243, 234, 214, 0.8);
+  cursor: pointer;
+}
+
+.pill:hover:not(:disabled) {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.pill:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.pill--insurance {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* --- playing card ------------------------------------------------------ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 96px;
+  height: 136px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  background: linear-gradient(var(--card-face-top), var(--card-face-bottom));
+  animation: dealIn var(--motion-deal) both;
+}
+
+.card--back {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--card-back-a) 0 6px,
+    var(--card-back-b) 6px 12px
+  );
+}
+
+.card--flip {
+  animation: flipIn var(--motion-flip) both;
+}
+
+.card--red {
+  color: var(--card-red);
+}
+
+.card--black {
+  color: var(--card-black);
+}
+
+.card__rank {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.card__rank--flipped {
+  transform: rotate(180deg);
+  text-align: right;
+}
+
+.card__suit {
+  font-size: 34px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* --- chip tray --------------------------------------------------------- */
+
+.tray {
+  display: flex;
+  gap: 12px;
+}
+
+.chip {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 4px dashed;
+  box-shadow: var(--shadow-chip);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 17px;
+  cursor: pointer;
+  transition: transform var(--motion-chip);
+}
+
+.chip:hover:not(:disabled) {
+  transform: translateY(-3px);
+}
+
+.chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- cashier row ------------------------------------------------------- */
+
+.cashier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  width: 100%;
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rail-hairline);
+}
+
+.plaque {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 22px;
+  border-radius: var(--r-plaque);
+  background: linear-gradient(var(--brass), var(--brass-deep));
+  color: var(--brass-on-dark);
+}
+
+.plaque__label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.plaque__amount {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.session {
+  display: flex;
+  gap: 26px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+}
+
+/* --- animations -------------------------------------------------------- */
+
+@keyframes dealIn {
+  from {
+    transform: translate(-460px, -230px) rotate(-24deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes flipIn {
+  from {
+    transform: rotateY(96deg);
+  }
+  to {
+    transform: rotateY(0);
+  }
+}
+
+@keyframes chipDrop {
+  from {
+    transform: translateY(-26px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card--flip,
+  .chip-stack__chip {
+    animation: none;
+  }
+  .chip {
+    transition: none;
+  }
+}
