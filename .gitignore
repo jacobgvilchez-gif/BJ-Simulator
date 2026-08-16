@@ -5,6 +5,10 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Vite dependency cache
+.vite/
+node_modules/.vite/
+
 # Test output
 coverage/
 
