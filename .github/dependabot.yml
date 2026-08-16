@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # Keeps the action versions pinned in .github/workflows from going stale.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci

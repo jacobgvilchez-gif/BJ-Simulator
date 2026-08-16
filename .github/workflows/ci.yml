@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+
+# Least privilege: these jobs only need to read the repo.
+permissions:
+  contents: read
+
+# Cancel superseded runs on a PR, but never cancel a run on main.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  hygiene:
+    name: Repo hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check for merge conflict markers
+        shell: bash
+        run: |
+          if git grep -nIE '^(<{7}|={7}|>{7})( |$)' -- .; then
+            echo "::error::Merge conflict markers found in the files listed above."
+            exit 1
+          fi
+
+      - name: Check for oversized files
+        shell: bash
+        run: |
+          limit=$((5 * 1024 * 1024))
+          fail=0
+          while IFS= read -r f; do
+            size=$(git cat-file -s "$(git rev-parse ":$f")")
+            if [ "$size" -gt "$limit" ]; then
+              echo "::error file=$f::$f is $((size / 1024 / 1024))MB, over the 5MB limit."
+              fail=1
+            fi
+          done < <(git ls-files)
+          exit "$fail"
+
+      - name: Check for case-insensitive filename collisions
+        shell: bash
+        run: |
+          dupes=$(git ls-files | tr '[:upper:]' '[:lower:]' | sort | uniq -d)
+          if [ -n "$dupes" ]; then
+            echo "::error::These paths collide on Windows/macOS filesystems:"
+            echo "$dupes"
+            exit 1
+          fi
+
+  actionlint:
+    name: Lint workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Also runs shellcheck over every `run:` block in these workflows.
+      - name: Run actionlint
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
+
+  # Placeholder for the real build/test gate. Once the stack is chosen, replace
+  # the body of this job with the actual install/lint/test/build steps — the job
+  # id stays `build` so the required-check config in branch protection keeps working.
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: No build configured yet
+        run: echo "No build or test suite configured yet."
