@@ -164,14 +164,59 @@ body {
   left: 15px;
   right: 15px;
   height: 118px;
+  display: grid;
+  place-items: center;
   border-radius: 5px;
   border: 2px solid #08080f;
+  /* White-hot against a blue screen. Drawing the card in the screen's own colour
+     made it sink in; amber read too warm for the rest of the palette. White is
+     the brightest thing available and still reads as a lit tube. */
+  --card-neon: rgba(255, 255, 255, 0.97);
   background:
     repeating-linear-gradient(rgba(0, 0, 0, 0.42) 0 1px, transparent 1px 3px),
     linear-gradient(165deg, #1c74ad 0%, #0a2f4e 56%, #05131f 100%);
   box-shadow:
     0 0 26px rgba(72, 242, 255, 0.55),
     inset 0 0 20px rgba(72, 242, 255, 0.3);
+}
+
+/* Sized well inside the bezel — a card that filled the screen stopped reading
+   as something displayed on a machine. Held still: a turning card drew the eye
+   away from the felt, which is where attention belongs.
+
+   A near-black body is what lets the neon edge and glyph read as lit rather
+   than merely tinted. */
+.cab__card {
+  width: 44%;
+  aspect-ratio: 5 / 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: 4px;
+  border: 1.5px solid var(--card-neon);
+  background: linear-gradient(160deg, rgba(3, 5, 12, 0.9), rgba(0, 0, 0, 0.96));
+  color: var(--card-neon);
+  text-shadow:
+    0 0 4px var(--card-neon),
+    0 0 12px var(--card-neon);
+  box-shadow:
+    0 0 10px var(--card-neon),
+    0 0 22px rgba(0, 0, 0, 0.7),
+    inset 0 0 10px rgba(255, 255, 255, 0.06);
+}
+
+.cab__card-rank {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.cab__card-suit {
+  font-size: 16px;
+  line-height: 1;
 }
 
 .cab__panel {
@@ -192,6 +237,8 @@ body {
 .cab--r1 .cab__screen,
 .cab--r2 .cab__screen,
 .cab--r3 .cab__screen {
+  /* Cyan against a magenta screen, the same complementary trick reversed. */
+  --card-neon: rgba(126, 249, 255, 0.96);
   background:
     repeating-linear-gradient(rgba(0, 0, 0, 0.42) 0 1px, transparent 1px 3px),
     linear-gradient(165deg, #93206f 0%, #481031 56%, #1d0714 100%);

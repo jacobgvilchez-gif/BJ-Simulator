@@ -17,6 +17,20 @@ import './styles/app.css';
 
 const SIGNAGE = 'Blackjack pays 3 to 2 — Dealer must stand on soft 17';
 
+/**
+ * One face card per cabinet screen, all six different, so no two machines are
+ * showing the same thing. Position is baked in rather than derived so the pairs
+ * across the two walls never collide.
+ */
+const CABINET_CARDS = [
+  { at: 'l1', rank: 'A', suit: '♠' },
+  { at: 'l2', rank: 'K', suit: '♦' },
+  { at: 'l3', rank: 'Q', suit: '♥' },
+  { at: 'r1', rank: 'J', suit: '♥' },
+  { at: 'r2', rank: 'Q', suit: '♦' },
+  { at: 'r3', rank: 'K', suit: '♣' },
+] as const;
+
 /** Short outcome labels for the line under each hand. */
 const OUTCOME_LABEL: Record<Outcome, string> = {
   blackjack: 'Blackjack',
@@ -86,15 +100,18 @@ export default function App() {
       {/* Three machines down each wall, filling the gutters either side of the
           table. Each is smaller, higher and dimmer than the one before it, which
           is what reads as a row receding down an arcade. */}
-      {(['l', 'r'] as const).flatMap((side) =>
-        [1, 2, 3].map((depth) => (
-          <div key={`${side}${depth}`} className={`cab cab--${side}${depth}`} aria-hidden="true">
-            <span className="cab__marquee" />
-            <span className="cab__screen" />
-            <span className="cab__panel" />
-          </div>
-        )),
-      )}
+      {CABINET_CARDS.map(({ at, rank, suit }) => (
+        <div key={at} className={`cab cab--${at}`} aria-hidden="true">
+          <span className="cab__marquee" />
+          <span className="cab__screen">
+            <span className="cab__card">
+              <span className="cab__card-rank">{rank}</span>
+              <span className="cab__card-suit">{suit}</span>
+            </span>
+          </span>
+          <span className="cab__panel" />
+        </div>
+      ))}
 
       <div className="room__reflect" aria-hidden="true" />
 
