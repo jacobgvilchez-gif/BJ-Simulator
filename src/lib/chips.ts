@@ -14,3 +14,10 @@ export const CHIP_STYLES: Record<Denomination, ChipStyle> = {
   25: { face: 'linear-gradient(#1f7a4d,#125634)', rim: '#e8cf95', label: '#fff6e2' },
   100: { face: 'linear-gradient(#2b2b2b,#101010)', rim: '#e8cf95', label: '#fff6e2' },
 };
+
+/** Buy-in ladder at the cashier; the wheel steps through these amounts. */
+export const BUY_INS = [100, 250, 500, 1000, 2500, 5000] as const;
+export type BuyIn = (typeof BUY_INS)[number];
+
+/** Amount the wheel opens on. */
+export const DEFAULT_BUY_IN: BuyIn = 500;

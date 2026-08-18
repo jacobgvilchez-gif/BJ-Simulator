@@ -1,4 +1,5 @@
 import {
+  dealerShouldHit,
   handValue,
   rankOf,
   RANK_VALUE,
@@ -7,6 +8,7 @@ import {
 } from './engine/engine';
 import { DENOMINATIONS } from './lib/chips';
 import { useGame } from './hooks/useGame';
+import { BuyIn } from './components/BuyIn';
 import { ChipButton, ChipStack } from './components/Chip';
 import { FaceDownCard, PlayingCard } from './components/PlayingCard';
 import { money, signedMoney } from './lib/format';
@@ -40,7 +42,25 @@ export default function App() {
   const isPlayerPhase = game.phase === 'player';
   const isInsurance = game.phase === 'insurance';
 
-  const message = game.message || (g.isBettingPhase ? 'Place your bet' : '');
+  // The hole card stays face down until the whole opening deal is out, so a
+  // natural still gets a proper reveal instead of landing pre-flipped.
+  const holeHidden = game.holeHidden || g.isDealing;
+  const visibleDealer = game.dealer.slice(0, g.dealerVisible);
+
+  // The engine leaves message empty until it settles, so the dealer's turn gets
+  // its own line rather than a blank one while the cards come out. Nothing is
+  // announced until the deal has finished landing.
+  let message = game.message;
+  if (g.isDealing) {
+    message = '';
+  } else if (!message) {
+    if (g.isBettingPhase) message = 'Place your bet';
+    // Say what the dealer is actually about to do — it stands pat as often as
+    // it draws, and claiming otherwise reads as a bug.
+    else if (g.isDealerDrawing) {
+      message = dealerShouldHit(game.dealer) ? 'Dealer draws' : 'Dealer stands';
+    }
+  }
   const insuranceCost = isInsurance ? Math.floor(game.hands[0].bet / 2) : 0;
 
   return (
@@ -56,13 +76,13 @@ export default function App() {
         <section className="seat seat--dealer">
           <div className="seat__label-row">
             <span className="seat__label">Dealer</span>
-            <span className="seat__total">{dealerTotalLabel(game.dealer, game.holeHidden)}</span>
+            <span className="seat__total">{dealerTotalLabel(visibleDealer, holeHidden)}</span>
           </div>
           <div className="card-row">
-            {game.dealer.map((card, i) => {
+            {visibleDealer.map((card, i) => {
               // The hole card swaps identity on reveal, so it mounts fresh and flips.
-              if (game.holeHidden && i === 1) return <FaceDownCard key="hole" />;
-              return <PlayingCard key={card} card={card} flip={i === 1 && !game.holeHidden} />;
+              if (holeHidden && i === 1) return <FaceDownCard key="hole" />;
+              return <PlayingCard key={card} card={card} flip={i === 1 && !holeHidden} />;
             })}
           </div>
         </section>
@@ -82,15 +102,18 @@ export default function App() {
             <span className="seat__label">Player</span>
             <div className="hands">
               {game.hands.map((hand, i) => {
-                const value = handValue(hand.cards);
-                const result = game.roundResults[i];
+                // Totals and outcomes follow what is actually face up, so nothing
+                // is given away before the card that justifies it has landed.
+                const cards = hand.cards.slice(0, g.playerVisible);
+                const value = handValue(cards);
+                const result = g.isDealing ? undefined : game.roundResults[i];
                 // The brass ring marks the hand being played, so it only appears
                 // during the player's turn and only once a split created a choice.
                 const active = isPlayerPhase && game.active === i && game.hands.length > 1;
                 return (
                   <div key={i} className={`hand${active ? ' hand--active' : ''}`}>
                     <div className="card-row">
-                      {hand.cards.map((card) => (
+                      {cards.map((card) => (
                         <PlayingCard key={card} card={card} />
                       ))}
                     </div>
@@ -114,7 +137,7 @@ export default function App() {
         <div className="message">{message}</div>
 
         {/* Insurance prompt — dealer ace only, before the round resolves */}
-        {isInsurance && (
+        {isInsurance && !g.isDealing && (
           <div className="insurance">
             <span className="insurance__text">Insurance pays 2 to 1</span>
             <button
@@ -136,7 +159,7 @@ export default function App() {
 
         {/* Action row */}
         <div className="actions">
-          {g.isBettingPhase && (
+          {g.isBettingPhase && !g.isDealing && (
             <button
               type="button"
               className="btn btn--primary"
@@ -148,7 +171,7 @@ export default function App() {
             </button>
           )}
 
-          {isPlayerPhase && (
+          {isPlayerPhase && !g.isDealing && (
             <>
               <button
                 type="button"
@@ -216,9 +239,13 @@ export default function App() {
             Clear bet
           </button>
 
-          <button type="button" className="pill" onClick={g.cashier}>
-            Cashier · buy in {money(g.cashierAmount)}
-          </button>
+          <BuyIn
+            amount={g.buyIn}
+            canRaise={g.canRaiseBuyIn}
+            canLower={g.canLowerBuyIn}
+            onStep={g.stepBuyIn}
+            onBuyIn={g.cashier}
+          />
 
           <div className="session">
             <span>Hands {stats.hands}</span>
