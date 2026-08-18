@@ -4,11 +4,11 @@
   --felt-center: #14614a;
   --felt-mid: #0d4636;
   --felt-edge: #06251c;
-  --card-face-top: #fffdf6;
-  --card-face-bottom: #f2e9d6;
+  --card-face-top: #fffefb;
+  --card-face-mid: #f5eddd;
+  --card-face-bottom: #e9ddc6;
   --card-back-a: #7d1f1f;
   --card-back-b: #5e1616;
-  --rail-hairline: rgba(232, 207, 149, 0.22);
 
   /* Ink */
   --ink: #f3ead6;
@@ -26,6 +26,9 @@
   /* Type */
   --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
   --font-ui: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  /* Monoton draws each glyph as parallel tubes, so it reads as neon before any
+     glow is applied. */
+  --font-neon: 'Monoton', 'Barlow Condensed', sans-serif;
 
   /* Radius */
   --r-plaque: 8px;
@@ -33,8 +36,11 @@
   --r-hand: 12px;
   --r-pill: 999px;
 
-  /* Shadows */
-  --shadow-card: 0 12px 22px rgba(0, 0, 0, 0.42);
+  /* Shadows. The card stack is deliberately three layers: a tight contact
+     shadow, a deep drop, and a bright inner rim, so a card lifts off the felt. */
+  --shadow-card:
+    0 2px 4px rgba(0, 0, 0, 0.5), 0 14px 26px rgba(0, 0, 0, 0.58),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --shadow-chip: 0 6px 12px rgba(0, 0, 0, 0.35);
   --shadow-button: 0 6px 14px rgba(0, 0, 0, 0.25);
   --shadow-chip-stacked: 0 2px 5px rgba(0, 0, 0, 0.4);
@@ -43,4 +49,29 @@
   --motion-chip: 0.18s ease-out;
   --motion-deal: 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
   --motion-flip: 0.3s;
+}
+
+/* --- retro arcade room ------------------------------------------------- */
+:root {
+  /* Neon */
+  --neon-cyan: #48f2ff;
+  --neon-magenta: #ff45d0;
+  --neon-violet: #9d4bff;
+  --neon-amber: #ffb347;
+
+  /* Room shell, back wall through to the floor at the reader's feet */
+  --room-near: #160d28;
+  --room-mid: #0d0719;
+  --room-far: #06040e;
+
+  /* Table body: padded rail and its brass trim */
+  --rail-leather-a: #3a2b23;
+  --rail-leather-b: #1d140f;
+  --rail-leather-c: #120c09;
+  --rail-brass: rgba(232, 207, 149, 0.55);
+
+  /* Player console */
+  --panel-a: #241634;
+  --panel-b: #150c20;
+  --panel-edge: rgba(72, 242, 255, 0.3);
 }
