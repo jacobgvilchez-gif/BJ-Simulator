@@ -76,6 +76,12 @@ export interface GameOptions {
   rng?: RNG;
   balance?: number;
   bet?: number;
+  /**
+   * Hold the dealer at phase 'dealer' instead of drawing out the hand inside
+   * advance(), so a caller can deal the remaining cards one at a time via
+   * dealerStep(). Off by default: advance() resolves the dealer outright.
+   */
+  pacedDealer?: boolean;
 }
 
 export interface SimulateResult {
@@ -247,6 +253,7 @@ export class Game {
   deck: Card[];
   pos: number;
   lastBet: number;
+  pacedDealer: boolean;
 
   phase!: Phase;
   dealer!: Card[];
@@ -267,6 +274,7 @@ export class Game {
     this.deck = buildDeck();
     this.pos = 52;
     this.lastBet = opts.bet != null ? opts.bet : 25;
+    this.pacedDealer = opts.pacedDealer === true;
     this.resetRound();
   }
 
@@ -473,8 +481,27 @@ export class Game {
     this.phase = 'dealer';
     this.holeHidden = false;
     const live = this.hands.some((h) => handValue(h.cards).total <= 21);
+    // Paced mode stops here with the hole card face up and the round unsettled,
+    // leaving dealerStep() to deal the rest at whatever tempo the caller wants.
+    if (live && this.pacedDealer) return;
     if (live) while (dealerShouldHit(this.dealer)) this.dealer.push(this.draw());
     this.settle();
+  }
+
+  /**
+   * One beat of the dealer's hand: draw a card if the dealer must hit,
+   * otherwise settle. Returns true while cards are still coming, so a caller
+   * can keep stepping until it returns false. Only reachable under
+   * pacedDealer — advance() otherwise finishes the dealer itself.
+   */
+  dealerStep(): boolean {
+    if (this.phase !== 'dealer') return false;
+    if (dealerShouldHit(this.dealer)) {
+      this.dealer.push(this.draw());
+      return true;
+    }
+    this.settle();
+    return false;
   }
 
   /** Resolution order is fixed: naturals -> bust -> comparison. */
