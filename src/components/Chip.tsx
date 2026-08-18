@@ -14,6 +14,14 @@ export function ChipButton({ denom, disabled, onClick }: ChipButtonProps) {
       className="chip"
       disabled={disabled}
       onClick={onClick}
+      /* A chip can be clicked or dragged onto the betting circle. The drag
+         carries its denomination so the circle knows what landed on it; click
+         stays as the quicker path and as the keyboard route. */
+      draggable={!disabled}
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/plain', String(denom));
+        e.dataTransfer.effectAllowed = 'copy';
+      }}
       aria-label={`Bet ${denom}`}
       style={{ background: style.face, borderColor: style.rim, color: style.label }}
     >

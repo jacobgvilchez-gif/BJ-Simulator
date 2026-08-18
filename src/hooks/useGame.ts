@@ -8,7 +8,8 @@ import {
   type Denomination,
 } from '../lib/chips';
 
-const INITIAL_PENDING: Denomination[] = [25];
+/** Nothing is on the felt until the player puts it there. */
+const INITIAL_PENDING: Denomination[] = [];
 
 /** Cards in an opening deal: player, dealer up, player, dealer hole. */
 const OPENING_CARDS = 4;

@@ -16,25 +16,371 @@ body {
   margin: 0;
   font-family: var(--font-ui);
   color: var(--ink);
+  background: var(--room-far);
   -webkit-font-smoothing: antialiased;
 }
 
-/* --- root surface ----------------------------------------------------- */
+/* --- the arcade room -------------------------------------------------- */
 
-.table {
+/* The scene is pinned to the viewport: the table is centred inside it and the
+   page never scrolls.
+
+   All of the room's lighting lives on this one full-frame element. Splitting it
+   into separate ceiling and floor layers put their edges mid-frame, and the
+   radial light pools got clipped by those edges — which is what showed up as a
+   hard horizontal seam straight across the room. */
+.room {
   position: relative;
-  min-height: 100vh;
+  height: 100%;
   overflow: hidden;
-  background: radial-gradient(
-    ellipse 80% 70% at 50% 34%,
-    var(--felt-center) 0%,
-    var(--felt-mid) 45%,
-    var(--felt-edge) 100%
-  );
+  background:
+    /* overhead pools */
+    radial-gradient(ellipse 20% 26% at 20% -4%, rgba(255, 179, 71, 0.16), transparent 70%),
+    radial-gradient(ellipse 20% 26% at 80% -4%, rgba(72, 242, 255, 0.14), transparent 70%),
+    radial-gradient(ellipse 56% 20% at 50% -6%, rgba(157, 75, 255, 0.16), transparent 72%),
+    /* light thrown along each wall by the machines */
+    radial-gradient(ellipse 26% 40% at 3% 62%, rgba(255, 179, 71, 0.16), transparent 72%),
+    radial-gradient(ellipse 26% 40% at 97% 62%, rgba(255, 69, 208, 0.15), transparent 72%),
+    /* floor sheen under the table, then a fall-off toward the viewer */
+    radial-gradient(ellipse 60% 26% at 50% 74%, rgba(130, 190, 255, 0.08), transparent 74%),
+    linear-gradient(transparent 40%, rgba(0, 0, 0, 0.26) 68%, rgba(0, 0, 0, 0.58) 100%),
+    linear-gradient(var(--room-near) 0%, var(--room-mid) 52%, var(--room-far) 100%);
 }
 
-/* Felt tooth — a fine dot grid over the whole surface. */
+/* Neon battens running back along each side wall, held inside the gutter so
+   they never cross a cabinet — a vertical tube drawn over the front machine
+   read as a glitch.
+
+   The line is a gradient that fades out at its inner end, and the glow comes
+   from drop-shadow rather than box-shadow: drop-shadow follows the element's
+   alpha, so the glow tapers with the line instead of stopping dead in mid-air. */
+.room__cove {
+  position: absolute;
+  height: 3px;
+  border-radius: 3px;
+  pointer-events: none;
+  background: linear-gradient(90deg, currentColor 0%, currentColor 44%, transparent 100%);
+  filter: drop-shadow(0 0 7px currentColor) drop-shadow(0 0 20px currentColor);
+}
+
+.room__cove--left {
+  left: -2%;
+  color: var(--neon-magenta);
+  transform: skewY(7deg);
+}
+
+.room__cove--right {
+  right: -2%;
+  color: var(--neon-cyan);
+  background: linear-gradient(270deg, currentColor 0%, currentColor 44%, transparent 100%);
+  transform: skewY(-7deg);
+}
+
+/* Each batten sits lower, shorter and dimmer, so the run converges. */
+.room__cove--n1 {
+  top: 10%;
+  width: 26%;
+}
+
+.room__cove--n2 {
+  top: 19%;
+  width: 22%;
+  opacity: 0.66;
+}
+
+.room__cove--n3 {
+  top: 28%;
+  width: 18%;
+  opacity: 0.44;
+}
+
+.room__cove--n4 {
+  top: 37%;
+  width: 14%;
+  opacity: 0.28;
+}
+
+/* --- arcade cabinets -------------------------------------------------- */
+
+/* Marquee, screen, control deck, coin door. All four are needed before a shape
+   this size reads as an arcade machine instead of a box. Sized to fill the
+   gutter beside the table, and seated well clear of the frame edge — anchored
+   near the bottom they were sliced in half and read as stray panels. */
+.cab {
+  position: absolute;
+  width: 150px;
+  height: 310px;
+  pointer-events: none;
+  border-radius: 14px 14px 4px 4px;
+  transform-origin: bottom center;
+  background: linear-gradient(#3b2b54 0%, #1e1432 42%, #0d0818 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 20px 44px rgba(0, 0, 0, 0.68);
+}
+
+/* Pool of light the machine throws on the floor. */
+.cab::before {
+  content: '';
+  position: absolute;
+  left: -18%;
+  right: -18%;
+  bottom: -18px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 179, 71, 0.32), transparent 70%);
+  filter: blur(8px);
+}
+
+/* Coin door. */
+.cab::after {
+  content: '';
+  position: absolute;
+  bottom: 18px;
+  left: 32px;
+  right: 32px;
+  height: 18px;
+  border-radius: 2px;
+  background: linear-gradient(#26183a, #120b1c);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.cab__marquee {
+  position: absolute;
+  top: 12px;
+  left: 11px;
+  right: 11px;
+  height: 32px;
+  border-radius: 3px;
+  background: linear-gradient(#fff3c8, var(--neon-amber) 56%, #d4761a);
+  box-shadow:
+    0 0 16px rgba(255, 179, 71, 0.8),
+    0 0 40px rgba(255, 179, 71, 0.45);
+}
+
+.cab__screen {
+  position: absolute;
+  top: 54px;
+  left: 15px;
+  right: 15px;
+  height: 118px;
+  border-radius: 5px;
+  border: 2px solid #08080f;
+  background:
+    repeating-linear-gradient(rgba(0, 0, 0, 0.42) 0 1px, transparent 1px 3px),
+    linear-gradient(165deg, #1c74ad 0%, #0a2f4e 56%, #05131f 100%);
+  box-shadow:
+    0 0 26px rgba(72, 242, 255, 0.55),
+    inset 0 0 20px rgba(72, 242, 255, 0.3);
+}
+
+.cab__panel {
+  position: absolute;
+  top: 188px;
+  left: 6px;
+  right: 6px;
+  height: 42px;
+  border-radius: 4px;
+  background: linear-gradient(#4d3770, #251835);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.11),
+    0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Machines down the right wall run magenta, so the two rows read as different
+   cabinets rather than a mirrored copy. */
+.cab--r1 .cab__screen,
+.cab--r2 .cab__screen,
+.cab--r3 .cab__screen {
+  background:
+    repeating-linear-gradient(rgba(0, 0, 0, 0.42) 0 1px, transparent 1px 3px),
+    linear-gradient(165deg, #93206f 0%, #481031 56%, #1d0714 100%);
+  box-shadow:
+    0 0 26px rgba(255, 69, 208, 0.55),
+    inset 0 0 20px rgba(255, 69, 208, 0.3);
+}
+
+/* Each machine down the row is smaller, higher and dimmer than the last. On a
+   narrow window the far ones simply pass behind the table. */
+.cab--l1 {
+  left: 12px;
+  bottom: 13%;
+  transform: perspective(760px) rotateY(19deg);
+}
+
+.cab--l2 {
+  left: 176px;
+  bottom: 19%;
+  opacity: 0.88;
+  transform: perspective(760px) rotateY(19deg) scale(0.84);
+}
+
+.cab--l3 {
+  left: 316px;
+  bottom: 24%;
+  opacity: 0.72;
+  transform: perspective(760px) rotateY(19deg) scale(0.7);
+}
+
+.cab--r1 {
+  right: 12px;
+  bottom: 13%;
+  transform: perspective(760px) rotateY(-19deg);
+}
+
+.cab--r2 {
+  right: 176px;
+  bottom: 19%;
+  opacity: 0.88;
+  transform: perspective(760px) rotateY(-19deg) scale(0.84);
+}
+
+.cab--r3 {
+  right: 316px;
+  bottom: 24%;
+  opacity: 0.72;
+  transform: perspective(760px) rotateY(-19deg) scale(0.7);
+}
+
+/* The table's own bloom on the polished floor. */
+.room__reflect {
+  position: absolute;
+  top: 57%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(920px, 82vw);
+  height: 150px;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(20, 97, 74, 0.42) 0%,
+    rgba(20, 97, 74, 0.13) 42%,
+    transparent 74%
+  );
+  filter: blur(16px);
+}
+
+/* CRT scanlines and a vignette. Kept *behind* the stage: laid over the table it
+   put a grille across the cards and made them read as fuzzy. */
+.room__crt {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(rgba(0, 0, 0, 0.13) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse 76% 66% at 50% 54%, transparent 40%, rgba(0, 0, 0, 0.52) 100%);
+}
+
+/* --- stage: table above, player console below ------------------------- */
+
+.stage {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 0 12px;
+}
+
+/* --- neon sign over the table ----------------------------------------- */
+
+/* Layered shadows from tight-and-white out to wide-and-coloured are what make
+   text read as a lit gas tube rather than as a blurred font. */
+.marquee {
+  flex: none;
+  margin: 0;
+  font-family: var(--font-neon);
+  font-weight: 400;
+  font-size: clamp(24px, 3vw, 42px);
+  line-height: 1.05;
+  letter-spacing: 0.07em;
+  text-indent: 0.07em;
+  color: #fff2fb;
+  text-shadow:
+    0 0 4px #ffffff,
+    0 0 11px var(--neon-magenta),
+    0 0 26px var(--neon-magenta),
+    0 0 52px var(--neon-violet),
+    0 0 92px rgba(157, 75, 255, 0.7);
+}
+
+/* Below this height the table and console already fill the frame, and the sign
+   would be squeezed against the top edge or clipped. */
+@media (max-height: 800px) {
+  .marquee {
+    display: none;
+  }
+}
+
+/* --- the table -------------------------------------------------------- */
+
+/* Half-moon body seen from above: the dealer stands at the flat top edge and
+   players sit around the bowed lower edge. This element is the padded rail;
+   .table__felt is the bed inset into it. */
+.table {
+  position: relative;
+  flex: none;
+  width: min(1020px, 92vw);
+  padding: 10px 18px 12px;
+  border-radius: 26px 26px 50% 50% / 26px 26px 66% 66%;
+  background: linear-gradient(
+    var(--rail-leather-a) 0%,
+    var(--rail-leather-b) 58%,
+    var(--rail-leather-c) 100%
+  );
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* Neon spill catching the rail: the room is lit magenta left, cyan right. */
 .table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 26px 0 46px -28px var(--neon-magenta),
+    inset -26px 0 46px -28px var(--neon-cyan);
+}
+
+/* Brass trim following the rail's curve. */
+.table::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid var(--rail-brass);
+  border-radius: 21px 21px 49% 49% / 21px 21px 64% 64%;
+  pointer-events: none;
+}
+
+.table__felt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 22px 6px;
+  border-radius: 18px 18px 48% 48% / 18px 18px 62% 62%;
+  background: radial-gradient(
+    ellipse 82% 76% at 50% 28%,
+    var(--felt-center) 0%,
+    var(--felt-mid) 46%,
+    var(--felt-edge) 100%
+  );
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 0 46px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+/* Felt tooth — a fine dot grid over the bed. */
+.table__felt::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -44,26 +390,73 @@ body {
   opacity: 0.5;
 }
 
-.table__column {
-  position: relative;
+/* --- dealer's furniture ------------------------------------------------ */
+
+/* Chip rack. Sits in the felt's top corner where it costs no layout height. */
+.rack {
+  position: absolute;
+  top: 10px;
+  left: 46px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 18px 32px 16px;
+  gap: 4px;
+  padding: 5px 7px;
+  border-radius: 5px;
+  pointer-events: none;
+  background: linear-gradient(#1d140e, #0b0805);
+  border: 1px solid rgba(232, 207, 149, 0.26);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
 }
 
-/* --- band 1: rail ----------------------------------------------------- */
+/* Each slot is a column of chips seen edge-on from above. */
+.rack__slot {
+  width: 23px;
+  height: 30px;
+  border-radius: 3px;
+  background-image: repeating-linear-gradient(rgba(0, 0, 0, 0.5) 0 1px, transparent 1px 5px);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
 
-.rail {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--ink-muted);
+.rack__slot--1 {
+  background-color: #e8e4d7;
+}
+
+.rack__slot--5 {
+  background-color: #b62b27;
+}
+
+.rack__slot--25 {
+  background-color: #1a6b44;
+}
+
+.rack__slot--100 {
+  background-color: #1f1f1f;
+}
+
+/* Card shoe at the dealer's other hand. */
+.shoe {
+  position: absolute;
+  top: 10px;
+  right: 46px;
+  width: 62px;
+  height: 40px;
+  border-radius: 4px 4px 9px 9px;
+  pointer-events: none;
+  background: linear-gradient(150deg, #2b1e15 0%, #150e09 72%);
+  border: 1px solid rgba(232, 207, 149, 0.24);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.6),
+    0 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* The deck's edge showing at the shoe's mouth. */
+.shoe::before {
+  content: '';
+  position: absolute;
+  inset: 6px 8px auto;
+  height: 13px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, #f1e8d4 0 2px, #cbbfa4 2px 4px);
+  opacity: 0.72;
 }
 
 /* --- shared seat label ------------------------------------------------ */
@@ -72,11 +465,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-}
-
-.seat--dealer {
-  min-height: 160px;
+  gap: 5px;
 }
 
 .seat__label-row {
@@ -101,22 +490,33 @@ body {
 
 .card-row {
   display: flex;
-  gap: 10px;
+  gap: 9px;
   perspective: 900px;
   min-height: 138px;
   align-items: flex-start;
 }
 
+/* Four or more cards fan over one another rather than running off the felt.
+   The overlap stops short of the rank in the corner, so every card stays
+   readable — which is how a dealer squares up a long hand anyway. */
+.card-row--tight {
+  gap: 0;
+}
+
+.card-row--tight .card + .card {
+  margin-left: -36px;
+}
+
 /* --- band 3: signage arc ---------------------------------------------- */
 
 .signage {
-  max-width: 720px;
+  width: min(680px, 100%);
   margin: 0 auto;
-  padding: 7px 0;
+  padding: 2px 0;
   text-align: center;
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 19px;
+  font-size: 17px;
   letter-spacing: 0.04em;
   color: rgba(232, 207, 149, 0.82);
   border-top: 1px solid rgba(232, 207, 149, 0.28);
@@ -128,13 +528,15 @@ body {
 
 /* --- band 4: betting circle + player hands ---------------------------- */
 
+/* Cards stack above the bet, so the whole felt width is free for hands. */
 .felt-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 34px;
-  /* reserves room for the chip stack, which sits outside the circle */
-  padding-left: 60px;
-  min-height: 120px;
+  gap: 8px;
+  /* Held constant so the table is the same height whether empty or dealt, which
+     stops the whole stage shifting when a hand lands. */
+  min-height: 288px;
 }
 
 .circle {
@@ -144,40 +546,50 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  width: 128px;
-  height: 128px;
+  gap: 2px;
+  width: 92px;
+  height: 92px;
   border: 2px solid var(--brass-line);
   border-radius: 50%;
   box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.28);
 }
 
+/* Lit while a chip is dragged over it, so the target is unmistakable. */
+.circle--drop {
+  border-color: var(--brass);
+  box-shadow:
+    inset 0 0 22px rgba(0, 0, 0, 0.28),
+    0 0 0 4px rgba(232, 207, 149, 0.22),
+    0 0 26px rgba(232, 207, 149, 0.6);
+}
+
 .circle__label {
-  font-size: 11px;
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   color: rgba(232, 207, 149, 0.7);
 }
 
 .circle__amount {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 24px;
+  line-height: 1.1;
   color: var(--ink-message);
 }
 
 /* chips build upward from the bottom */
 .chip-stack {
   position: absolute;
-  left: -70px;
-  bottom: 24px;
+  left: -56px;
+  bottom: 14px;
   display: flex;
   flex-direction: column-reverse;
 }
 
 .chip-stack__chip {
-  width: 52px;
-  height: 13px;
-  margin-top: -7px;
+  width: 46px;
+  height: 12px;
+  margin-top: -6px;
   border-radius: 50%;
   border: 3px solid;
   box-shadow: var(--shadow-chip-stacked);
@@ -186,9 +598,8 @@ body {
 
 .hands {
   display: flex;
-  gap: 34px;
+  gap: 18px;
   perspective: 900px;
-  min-height: 150px;
 }
 
 .hand {
@@ -196,7 +607,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 8px;
+  padding: 6px;
   border: 2px solid transparent;
   border-radius: var(--r-hand);
 }
@@ -228,26 +639,34 @@ body {
 /* --- band 5: round message -------------------------------------------- */
 
 .message {
-  min-height: 28px;
+  min-height: 22px;
   text-align: center;
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 19px;
   letter-spacing: 0.04em;
   color: var(--ink-message);
 }
 
 /* --- insurance prompt -------------------------------------------------- */
 
+/* Floated over the felt rather than stacked in the console, so neither the
+   table nor the console changes height when the dealer shows an ace. */
 .insurance {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  align-self: center;
-  padding: 12px 20px;
-  border: 1px solid rgba(232, 207, 149, 0.45);
+  white-space: nowrap;
+  padding: 10px 18px;
+  border: 1px solid rgba(232, 207, 149, 0.55);
   border-radius: var(--r-pill);
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(5, 18, 14, 0.92);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
 }
 
 .insurance__text {
@@ -260,10 +679,10 @@ body {
 
 .actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
-  min-height: 46px;
+  min-height: 40px;
 }
 
 /* --- buttons ----------------------------------------------------------- */
@@ -274,7 +693,7 @@ body {
   font-size: 15px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  padding: 14px 26px;
+  padding: 11px 22px;
   border-radius: var(--r-pill);
   box-shadow: var(--shadow-button);
   cursor: pointer;
@@ -339,10 +758,14 @@ body {
   width: 96px;
   height: 136px;
   padding: 8px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 0, 0, 0.42);
   border-radius: var(--r-card);
   box-shadow: var(--shadow-card);
-  background: linear-gradient(var(--card-face-top), var(--card-face-bottom));
+  background: linear-gradient(
+    var(--card-face-top),
+    var(--card-face-mid) 70%,
+    var(--card-face-bottom)
+  );
   animation: dealIn var(--motion-deal) both;
 }
 
@@ -392,16 +815,22 @@ body {
 }
 
 .chip {
-  width: 58px;
-  height: 58px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: 4px dashed;
   box-shadow: var(--shadow-chip);
   font-family: var(--font-ui);
   font-weight: 600;
-  font-size: 17px;
-  cursor: pointer;
+  font-size: 15px;
+  /* Grab cursor advertises that a chip can be dragged onto the circle as well
+     as clicked. */
+  cursor: grab;
   transition: transform var(--motion-chip);
+}
+
+.chip:active:not(:disabled) {
+  cursor: grabbing;
 }
 
 .chip:hover:not(:disabled) {
@@ -420,18 +849,17 @@ body {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 26px;
+  gap: 16px;
   width: 100%;
-  margin-top: 2px;
-  padding-top: 14px;
-  border-top: 1px solid var(--rail-hairline);
+  padding-top: 8px;
+  border-top: 1px solid rgba(72, 242, 255, 0.16);
 }
 
 .plaque {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 22px;
+  padding: 7px 16px;
   border-radius: var(--r-plaque);
   background: linear-gradient(var(--brass), var(--brass-deep));
   color: var(--brass-on-dark);
@@ -446,14 +874,14 @@ body {
 .plaque__amount {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 26px;
+  font-size: 22px;
   line-height: 1.1;
 }
 
 .session {
   display: flex;
-  gap: 26px;
-  font-size: 13px;
+  gap: 16px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: var(--ink-faint);
@@ -537,8 +965,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 98px;
-  padding: 6px 14px;
+  min-width: 84px;
+  padding: 4px 10px;
   border-radius: var(--r-plaque);
   border: 1px solid var(--brass-line);
   background: rgba(0, 0, 0, 0.24);
@@ -566,3 +994,67 @@ body {
   padding: 9px 14px;
   font-size: 12px;
 }
+
+/* --- player console ---------------------------------------------------- */
+
+/* The controls live off the felt on a cabinet-style panel, which is also where
+   a player's chips really sit: on the rail in front of them. */
+.console {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(1020px, 92vw);
+  padding: 8px 22px 8px;
+  border-radius: 14px;
+  /* Brushed plastic: a sheen across the top, a fine vertical grain, then the
+     body colour — the way a cabinet control panel catches light. */
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08), transparent 16%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 4px),
+    linear-gradient(var(--panel-a), var(--panel-b));
+  border: 1px solid var(--panel-edge);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 0 24px rgba(72, 242, 255, 0.16),
+    0 14px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* Neon strip along the panel's leading edge. */
+.console::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 7%;
+  right: 7%;
+  height: 2px;
+  border-radius: 2px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--neon-cyan) 28%,
+    var(--neon-magenta) 72%,
+    transparent
+  );
+  box-shadow: 0 0 12px rgba(72, 242, 255, 0.75);
+}
+
+/* Underglow, as if the panel were floating over the lit floor. */
+.console::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -10px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(72, 242, 255, 0.5), transparent 70%);
+  filter: blur(5px);
+}
+
+/* --- animations (room) ------------------------------------------------- */
+
