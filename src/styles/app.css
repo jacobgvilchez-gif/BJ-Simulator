@@ -662,9 +662,13 @@ body {
   animation: chipDrop var(--motion-chip) both;
 }
 
-/* The bottom chip keeps its full height; the negative margin only applies
-   between chips. */
-.chip-stack__chip:first-child {
+/* The stack is column-reverse, so the line fills bottom-up and each chip's
+   margin-top closes the gap ABOVE it — that is, between it and the next chip.
+   The one to exempt is therefore the last child, whose margin-top would only
+   add stray space above the whole stack. Exempting :first-child instead removes
+   the overlap that joins the bottom chip to the rest, and it detaches into a
+   second stack a full chip-height below. */
+.chip-stack__chip:last-child {
   margin-top: 0;
 }
 
