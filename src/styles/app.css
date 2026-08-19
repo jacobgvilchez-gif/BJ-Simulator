@@ -617,30 +617,55 @@ body {
   color: rgba(232, 207, 149, 0.7);
 }
 
+/* Printed over the chip stack, so it needs a hard dark edge to stay legible
+   against whatever chip colours end up underneath it. */
 .circle__amount {
+  position: relative;
+  z-index: 2;
   font-family: var(--font-display);
+  font-weight: 700;
   font-size: 24px;
   line-height: 1.1;
-  color: var(--ink-message);
+  color: #fff8e6;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.95),
+    0 0 8px rgba(0, 0, 0, 0.9),
+    0 0 16px rgba(0, 0, 0, 0.75);
 }
 
-/* chips build upward from the bottom */
+/* The stack sits in the middle of the circle, where a real bet goes, rather than
+   off to one side. Centred on the circle and built upward, so the newest chip
+   lands on top. */
 .chip-stack {
   position: absolute;
-  left: -56px;
-  bottom: 14px;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column-reverse;
+  align-items: center;
 }
 
+/* Round, not elliptical: seen from above a chip is a disc. Each sits nearly on
+   top of the one below, leaving a few pixels of rim showing so the stack reads
+   as several chips deep without growing past the circle. */
 .chip-stack__chip {
-  width: 46px;
-  height: 12px;
-  margin-top: -6px;
+  width: 38px;
+  height: 38px;
+  margin-top: -34px;
   border-radius: 50%;
-  border: 3px solid;
-  box-shadow: var(--shadow-chip-stacked);
+  border: 3px dashed;
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   animation: chipDrop var(--motion-chip) both;
+}
+
+/* The bottom chip keeps its full height; the negative margin only applies
+   between chips. */
+.chip-stack__chip:first-child {
+  margin-top: 0;
 }
 
 .hands {
@@ -720,6 +745,104 @@ body {
   font-family: var(--font-display);
   font-style: italic;
   font-size: 18px;
+}
+
+/* --- round result banner ----------------------------------------------- */
+
+/* Built like a live table's payout banner: a hairline-ruled band carrying a
+   small label over a large figure, cents set smaller than the dollars. It sits
+   over the felt and clears itself when its own animation ends, so there is no
+   timer and no state tracking whether it is showing. */
+.banner {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 290px;
+  padding: 9px 46px 11px;
+  pointer-events: none;
+  text-align: center;
+  background: linear-gradient(rgba(4, 12, 10, 0.8), rgba(2, 7, 6, 0.9));
+  backdrop-filter: blur(2px);
+  animation: bannerIn 2.4s ease-out both;
+}
+
+/* The two rules sweep out from the centre as the band lands. */
+.banner::before,
+.banner::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--banner-ink) 16%,
+    var(--banner-ink) 84%,
+    transparent
+  );
+  box-shadow: 0 0 10px var(--banner-ink);
+  animation: bannerRule 0.6s cubic-bezier(0.16, 0.9, 0.28, 1) both;
+}
+
+.banner::before {
+  top: 0;
+}
+
+.banner::after {
+  bottom: 0;
+}
+
+.banner__label {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: rgba(243, 234, 214, 0.88);
+  animation: bannerText 0.46s ease-out 0.14s both;
+}
+
+.banner__amount {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 1.05;
+  color: var(--banner-ink);
+  text-shadow:
+    0 0 8px var(--banner-ink),
+    0 0 26px var(--banner-glow);
+  animation: bannerText 0.46s ease-out 0.2s both;
+}
+
+/* Cents ride smaller and raised, the way a payout is printed. */
+.banner__cents {
+  font-size: 0.5em;
+  vertical-align: 0.86em;
+  letter-spacing: 0.02em;
+}
+
+/* Gold for a win, because the table's own metal is brass. A loss is deliberately
+   quieter than a win — the same weight in red would read as a scolding. */
+.banner--win {
+  --banner-ink: #f2d79b;
+  --banner-glow: rgba(232, 207, 149, 0.55);
+}
+
+.banner--loss {
+  --banner-ink: #ff8a95;
+  --banner-glow: rgba(255, 90, 110, 0.35);
+}
+
+.banner--push {
+  --banner-ink: #d8dfe8;
+  --banner-glow: rgba(216, 223, 232, 0.3);
 }
 
 /* --- action row -------------------------------------------------------- */
@@ -967,6 +1090,63 @@ body {
   }
 }
 
+/* The banner lands, holds, then lifts away as it fades. Ending on visibility
+   hidden is what lets it dismiss itself without a timer. */
+@keyframes bannerIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -44%) scale(0.96);
+  }
+  11% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  76% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -57%) scale(1);
+  }
+}
+
+@keyframes bannerRule {
+  from {
+    opacity: 0;
+    transform: scaleX(0.05);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes bannerText {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Reduced motion still needs the banner to clear itself, so it keeps a fade on
+   the same schedule and drops only the movement. */
+@keyframes bannerFade {
+  0%,
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card,
   .card--flip,
@@ -975,6 +1155,16 @@ body {
   }
   .chip {
     transition: none;
+  }
+  .banner {
+    transform: translate(-50%, -50%);
+    animation: bannerFade 2.4s linear both;
+  }
+  .banner::before,
+  .banner::after,
+  .banner__label,
+  .banner__amount {
+    animation: none;
   }
 }
 

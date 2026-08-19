@@ -34,9 +34,13 @@ interface ChipStackProps {
   chips: Denomination[];
 }
 
-/** The wagered chips, stacked outside the betting circle. Last 14 only. */
+/**
+ * The wagered chips, stacked inside the betting circle and seen from above, so
+ * only the last few need to show — a tall fan would outgrow the circle and bury
+ * the amount printed over it.
+ */
 export function ChipStack({ chips }: ChipStackProps) {
-  const visible = chips.slice(-14);
+  const visible = chips.slice(-6);
   const offset = chips.length - visible.length;
 
   return (
