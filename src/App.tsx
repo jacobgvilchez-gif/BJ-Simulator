@@ -12,7 +12,7 @@ import { useGame } from './hooks/useGame';
 import { BuyIn } from './components/BuyIn';
 import { ChipButton, ChipStack } from './components/Chip';
 import { FaceDownCard, PlayingCard } from './components/PlayingCard';
-import { money, signedMoney } from './lib/format';
+import { money, payoutParts, signedMoney } from './lib/format';
 import './styles/app.css';
 
 const SIGNAGE = 'Blackjack pays 3 to 2 — Dealer must stand on soft 17';
@@ -79,6 +79,20 @@ export default function App() {
     }
   }
   const insuranceCost = isInsurance ? Math.floor(game.hands[0].bet / 2) : 0;
+
+  // Result banner. roundNet is the whole round's net, so a split that wins one
+  // hand and loses the other reports one true outcome rather than two
+  // contradictory ones. A natural gets its own label, since it pays 3:2.
+  const net = game.roundNet;
+  const tone = net > 0 ? 'win' : net < 0 ? 'loss' : 'push';
+  const bannerLabel = game.roundResults.some((r) => r.outcome === 'blackjack')
+    ? 'Blackjack'
+    : tone === 'win'
+      ? 'You win'
+      : tone === 'loss'
+        ? 'You lose'
+        : 'Push';
+  const payout = payoutParts(net);
 
   return (
     <div className="room">
@@ -207,11 +221,28 @@ export default function App() {
                   if (DENOMINATIONS.includes(denom) && g.canAddChip(denom)) g.addChip(denom);
                 }}
               >
-                <span className="circle__label">Wager</span>
-                <span className="circle__amount">{money(g.wager)}</span>
+                {/* The circle reads "Wager" while it is empty; once chips are on
+                    it, the total is printed over the stack instead. */}
+                {g.pending.length === 0 && <span className="circle__label">Wager</span>}
                 <ChipStack chips={g.pending} />
+                <span className="circle__amount">{money(g.wager)}</span>
               </div>
             </div>
+
+            {/* Result banner. Keyed by the log length so it remounts — and so
+                replays its animation — once per settled round. The animation ends
+                hidden, so it dismisses itself with no timer and no extra state. */}
+            {game.phase === 'settled' && !g.isDealing && (
+              <div key={game.log.length} className={`banner banner--${tone}`} aria-hidden="true">
+                <span className="banner__label">{bannerLabel}</span>
+                {net !== 0 && (
+                  <span className="banner__amount">
+                    {payout.dollars}
+                    <span className="banner__cents">{payout.cents}</span>
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Insurance prompt — dealer ace only, before the round resolves.
                 Floated over the felt so the console keeps a constant height. */}
