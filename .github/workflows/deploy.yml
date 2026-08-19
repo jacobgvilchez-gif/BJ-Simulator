@@ -1,0 +1,58 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # So the site can be re-published without an empty commit.
+  workflow_dispatch:
+
+# Pages mints its own deployment token, which is what id-token is for. Nothing
+# here writes to the repository itself.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and queued rather than cancelled: a run that has already
+# started publishing should never be interrupted half-way.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # vite.config.ts sets a relative base, so the bundle works unchanged from
+      # the /BJ-Simulator/ subpath Pages serves a project site from.
+      - name: Build
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
